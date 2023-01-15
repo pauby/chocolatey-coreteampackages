@@ -1,42 +1,4 @@
-﻿function GetDownloadsData() {
-  param($filePath)
-
-  $data = Get-Content $filePath | ConvertFrom-Csv -Delimiter '|'
-  return $data
-}
-
-function GetLocaleData() {
-  param($downloadData)
-
-  $availableLocales = $downloadData | Select-Object -expand Locale
-
-  $pp = Get-PackageParameters
-  $preferredLocale = if ($pp.Locale) { $pp.Locale } else { (Get-Culture).Name }
-  $twoLetterLocale = (Get-Culture).TwoLetterISOLanguageName
-  $fallbackLocale = 'en-US'
-
-  $locales = $preferredLocale,$twoLetterLocale,$fallbackLocale
-
-  foreach ($locale in $locales) {
-    $localeMatch = $availableLocales | Where-Object { $_ -eq $locale } | Select-Object -first 1
-    if (!$localeMatch -and $locale -ne $null -and $locale.Count -eq 2) {
-      $localeMatch = $availableLocales | Where-Object { ($_ -split '-' | Select-Object -first 1) -eq $locale } | Select-Object -first 1
-    }
-    if ($localeMatch -and $locale -ne $null) { break }
-  }
-
-  return $downloadData | Where-Object { $_.Locale -eq $locale } | Select-Object -first 1
-}
-
-function GetDownloadInformation() {
-  param($toolsPath)
-  $dlData = GetDownloadsData "$toolsPath\LanguageChecksums.csv"
-  if (!$dlData) { throw "No URLs is available to download from!" }
-  $locale = GetLocaleData $dlData
-  return $locale
-}
-
-function GetInstallDirectory() {
+﻿function GetInstallDirectory() {
   param($toolsPath)
 
   $pp = Get-PackageParameters
@@ -61,13 +23,13 @@ function GetInstallDirectory() {
       ($oldDestinationFolder -ne $destinationFolder)) {
     $destinationFolder = $oldDestinationFolder
 
-    Write-Warning @(
-      'Deprecated installation fodler detected: Desktop/Tor-Browser. ' +
-      'This package will continue to install tor-browser there unless you ' +
-      'remove the deprecated installation folder. After your did that, reinstall ' +
-      'this package again with the "--force" parameter. Then it will be installed ' +
-      'to the package tools directory.'
-    )
+    Write-Warning @"
+Deprecated installation folder detected: Desktop/Tor-Browser.
+This package will continue to install tor-browser there unless you
+remove the deprecated installation folder. After your did that, reinstall
+this package again with the "--force" parameter. Then it will be installed
+to the package tools directory.
+"@
   }
 
   return $destinationFolder

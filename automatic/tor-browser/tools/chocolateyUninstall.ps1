@@ -1,8 +1,9 @@
 ﻿$ErrorActionPreference = 'Stop'
 
 $desktop = [System.Environment]::GetFolderPath('Desktop')
+$shortcutPath = Join-Path -Path $desktop -ChildPath 'Tor Browser.lnk'
 
-if (Test-Path "$desktop\Tor Browser.lnk") {
+if (Test-Path -Path $shortcutPath) {
   Write-Host "Removing Desktop shortcut..."
-  Remove-Item -Force -ea 0 "$desktop\Tor Browser.lnk"
+  Remove-Item -Path $shortcutPath -Force -ErrorAction SilentlyContinue
 }
